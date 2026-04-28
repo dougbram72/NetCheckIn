@@ -6,7 +6,7 @@ const { randomUUID } = require("node:crypto");
 const zlib = require("node:zlib");
 const { DatabaseSync } = require("node:sqlite");
 
-const HOST = "127.0.0.1";
+const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PORT || 3100);
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, "data");
@@ -1565,15 +1565,18 @@ function findPythonExecutable() {
   }
 
   candidates.push("python");
+  candidates.push("python3");
 
-  const whereResult = spawnSync("where.exe", ["python"], {
-    encoding: "utf8",
-    windowsHide: true,
-  });
+  if (process.platform === "win32") {
+    const whereResult = spawnSync("where.exe", ["python"], {
+      encoding: "utf8",
+      windowsHide: true,
+    });
 
-  if (whereResult.status === 0) {
-    for (const line of whereResult.stdout.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)) {
-      candidates.push(line);
+    if (whereResult.status === 0) {
+      for (const line of whereResult.stdout.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)) {
+        candidates.push(line);
+      }
     }
   }
 

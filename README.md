@@ -25,6 +25,21 @@ NetCheckin is a standalone HAM radio net controller app with its own local SQLit
 
 Serving it from `localhost` lets the browser grant microphone access more reliably than opening the HTML file directly.
 
+## Run with Docker
+
+1. Copy `.env.example` to `.env` if you want to override defaults such as the local Ollama endpoint or model.
+   Use `.env.docker.example` if you want Docker-specific guidance for Ollama host access.
+1. Build and start the container:
+   `docker compose up --build`
+2. Open `http://127.0.0.1:3100`
+
+Notes:
+
+- The container persists app data through the local `./data` folder.
+- `OLLAMA_HOST` defaults to `http://host.docker.internal:11434` so the container can reach a local Ollama instance running on the host.
+- Set `OLLAMA_MODEL` in `.env` if you want Docker to pin NetCheckin to a specific local Ollama model.
+- The first STT run inside Docker may take a while because the CPU Torch/Torchaudio stack and speech model are large.
+
 ## Data storage
 
 NetCheckin creates a local SQLite database at `C:\Dev\NetCheckin\data\netcheckin.db`.

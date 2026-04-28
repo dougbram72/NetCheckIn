@@ -1,0 +1,16 @@
+services:
+  netcheckin:
+    build: .
+    container_name: netcheckin
+    ports:
+      - "${NETCHECKIN_PORT:-3100}:3100"
+    environment:
+      HOST: ${NETCHECKIN_HOST:-0.0.0.0}
+      PORT: 3100
+      NETCHECKIN_PYTHON: ${NETCHECKIN_PYTHON:-python3}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-}
+    volumes:
+      - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
