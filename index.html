@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetCheckin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">HAM Net Controller Workspace</p>
+        <h1>NetCheckin</h1>
+        <p class="hero-copy">
+          Build a net, manage scripts, prep roll call, and capture live check-ins without losing the flow of the radio.
+        </p>
+      </div>
+      <section class="status-card" aria-label="Listening status">
+        <p class="status-label">Audio Capture</p>
+        <p class="status-value" id="listening-status">Idle</p>
+        <p class="status-help">Hold the spacebar anywhere in the app to start listening.</p>
+      </section>
+    </header>
+
+    <main class="dashboard">
+      <section class="panel panel-accent">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-kicker">Net Setup</p>
+            <h2>Create or Edit a Net</h2>
+          </div>
+          <label class="inline-select">
+            <span>Saved Nets</span>
+            <select id="net-selector"></select>
+          </label>
+        </div>
+
+        <form id="net-form" class="net-form">
+          <div class="field-grid">
+            <label>
+              <span>Net Name</span>
+              <input id="net-name" name="name" type="text" placeholder="Example: Thursday Night Skywarn Net" required>
+            </label>
+            <label>
+              <span>Date</span>
+              <input id="net-date" name="date" type="date" required>
+            </label>
+            <label>
+              <span>Start Time</span>
+              <input id="net-time" name="time" type="time" required>
+            </label>
+            <label>
+              <span>Frequency</span>
+              <input id="net-frequency" name="frequency" type="text" placeholder="146.940 MHz" required>
+            </label>
+            <label>
+              <span>Net Control Callsign</span>
+              <input id="net-control-callsign" name="netControlCallsign" type="text" placeholder="Example: N0CALL">
+            </label>
+            <div class="net-control-card" id="net-control-details">
+              <span class="net-control-label">Net Control</span>
+              <strong>No net control selected</strong>
+              <small>Enter a callsign to look up name and location.</small>
+            </div>
+          </div>
+
+          <fieldset class="mode-toggle">
+            <legend>Net Type</legend>
+            <label class="mode-card">
+              <input type="radio" name="mode" value="repeater" checked>
+              <span>Repeater</span>
+            </label>
+            <label class="mode-card">
+              <input type="radio" name="mode" value="simplex">
+              <span>Simplex</span>
+            </label>
+          </fieldset>
+
+          <div class="field-grid repeater-only" id="repeater-fields">
+            <label>
+              <span>Repeater Name</span>
+              <input id="repeater-name" name="repeaterName" type="text" placeholder="Club 2-Meter Machine">
+            </label>
+            <label>
+              <span>Offset</span>
+              <input id="repeater-offset" name="repeaterOffset" type="text" placeholder="-0.600 MHz">
+            </label>
+            <label>
+              <span>PL Tone</span>
+              <input id="repeater-tone" name="plTone" type="text" placeholder="103.5 Hz">
+            </label>
+          </div>
+
+          <div class="script-stacks">
+            <section class="script-group">
+              <div class="script-group-header">
+                <div>
+                  <span class="panel-kicker">Script</span>
+                  <h3>Opening Script</h3>
+                </div>
+              </div>
+              <div id="opening-sections" class="script-section-list"></div>
+            </section>
+
+            <section class="script-group">
+              <div class="script-group-header">
+                <div>
+                  <span class="panel-kicker">Script</span>
+                  <h3>Closing Script</h3>
+                </div>
+              </div>
+              <div id="closing-sections" class="script-section-list"></div>
+            </section>
+          </div>
+
+          <div class="button-row">
+            <button type="submit" class="button button-primary">Save Net</button>
+            <button type="button" id="new-net-button" class="button button-secondary">New Net</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-kicker">Roll Call</p>
+            <h2>Pre-Entered Stations</h2>
+          </div>
+        </div>
+
+        <form id="roll-call-form" class="roll-call-entry">
+          <label>
+            <span>Callsign</span>
+            <input id="roll-call-input" type="text" placeholder="K9XYZ">
+          </label>
+          <label>
+            <span>Notes</span>
+            <input id="roll-call-note" type="text" placeholder="Control operator, guest, late check-in">
+          </label>
+          <button type="submit" class="button button-primary">Add Station</button>
+        </form>
+
+        <div class="roll-call-toolbar">
+          <button type="button" id="mark-all-present" class="button button-secondary">Mark All Present</button>
+          <button type="button" id="clear-all-present" class="button button-secondary">Clear Checks</button>
+          <button type="button" id="create-pdf-report" class="button button-secondary">Create PDF Report</button>
+        </div>
+
+        <div id="roll-call-list" class="roll-call-list" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-capture">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-kicker">Callsign Capture</p>
+            <h2>Lookup and Add from Audio</h2>
+          </div>
+        </div>
+
+        <div class="capture-layout">
+          <article class="capture-card">
+            <h3>Lookup</h3>
+            <form id="lookup-form" class="lookup-form">
+              <input id="lookup-input" type="text" placeholder="Type a callsign to lookup">
+              <button type="submit" class="button button-primary">Lookup</button>
+            </form>
+            <p class="capture-note">
+              NetCheckin now uses its own local FCC import workflow for callsign lookups.
+            </p>
+            <div id="lookup-result" class="lookup-result"></div>
+            <form id="callsign-import-form" class="import-form">
+              <label>
+                <span>Import FCC File</span>
+                <input id="callsign-file" type="file" accept=".zip,.dat,.txt">
+              </label>
+              <button type="submit" class="button button-secondary">Import FCC Data</button>
+            </form>
+            <button type="button" id="download-fcc-data" class="button button-secondary download-fcc-button">
+              Download Latest FCC Data
+            </button>
+            <p id="import-status" class="capture-note">
+              Import the FCC ULS zip or individual files such as <code>EN.dat</code> and <code>AM.dat</code>.
+            </p>
+          </article>
+
+          <article class="capture-card">
+            <h3>Live Audio</h3>
+            <p class="capture-note">
+              Hold <kbd>Space</kbd> to record, then release to transcribe locally. When a candidate callsign is recognized, click it to add it to roll call.
+            </p>
+            <div class="audio-controls">
+              <label>
+                <span>Audio Source</span>
+                <select id="audio-source">
+                  <option value="microphone">Microphone</option>
+                  <option value="system">System Audio</option>
+                </select>
+              </label>
+              <label id="audio-device-wrap">
+                <span>Input Device</span>
+                <select id="audio-device"></select>
+              </label>
+            </div>
+            <div class="button-row">
+              <button type="button" id="request-audio-access" class="button button-secondary">Allow Audio Access</button>
+              <button type="button" id="refresh-audio-devices" class="button button-secondary">Refresh Devices</button>
+            </div>
+            <p id="audio-help" class="capture-note">
+              Microphone mode is the most reliable in the browser. System-audio capture depends on browser support and share permissions.
+            </p>
+            <div id="transcript-output" class="transcript-output">No audio captured yet.</div>
+            <div id="candidate-list" class="candidate-list"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="script-section-template">
+    <article class="script-card">
+      <button type="button" class="script-preview"></button>
+      <div class="script-card-actions">
+        <button type="button" class="button button-secondary edit-section">Open Large Editor</button>
+        <button type="button" class="button button-secondary add-section">Add Text Section</button>
+      </div>
+    </article>
+  </template>
+
+  <template id="roll-call-item-template">
+    <article class="roll-call-item" draggable="true">
+      <div class="drag-handle" aria-hidden="true">::</div>
+      <input type="checkbox" class="station-present" aria-label="Mark station present">
+      <div class="station-content">
+        <div class="station-summary"></div>
+        <div class="station-note-preview"></div>
+      </div>
+      <button type="button" class="note-button" title="Add or edit notes" aria-label="Add or edit notes">📝</button>
+      <button type="button" class="link-button remove-station">Remove</button>
+    </article>
+  </template>
+
+  <dialog id="station-note-modal" class="script-modal">
+    <form method="dialog" class="script-modal-card note-modal-card">
+      <div class="script-modal-header">
+        <div>
+          <p class="panel-kicker">Roll Call Note</p>
+          <h3 id="station-note-title">Edit Station Notes</h3>
+        </div>
+        <button type="button" id="close-station-note-modal" class="link-button">Close</button>
+      </div>
+      <textarea id="station-note-text" rows="6" placeholder="Add notes for this station"></textarea>
+      <div class="button-row">
+        <button type="button" id="save-station-note-modal" class="button button-primary">Save Note</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="script-editor-modal" class="script-modal">
+    <form method="dialog" class="script-modal-card">
+      <div class="script-modal-header">
+        <div>
+          <p class="panel-kicker">Script Section</p>
+          <h3 id="script-modal-title">Edit Script Section</h3>
+        </div>
+        <button type="button" id="close-script-modal" class="link-button">Close</button>
+      </div>
+      <textarea id="script-modal-text" rows="16" placeholder="Enter script text here"></textarea>
+      <div class="button-row">
+        <button type="button" id="save-script-modal" class="button button-primary">Save Section</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
